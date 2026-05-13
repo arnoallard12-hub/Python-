@@ -3,233 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GhostOS Academy — Ultra</title>
+    <title>GhostOS Academy — Master Edition</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
     <style>
         :root {
-            --bg: #050508;
-            --bg-card: #0d0d14;
-            --p: #7F77DD; /* Violet GhostOS */
-            --teal: #1D9E75;
-            --gold: #FFD700;
-            --text: #e6e3f0;
-            --error: #ff4d4d;
-            --border: rgba(127, 119, 221, 0.2);
+            --bg: #030305;
+            --bg-panel: #0a0a0f;
+            --p: #8A77FF; /* Violet électrique */
+            --p-glow: rgba(138, 119, 255, 0.3);
+            --teal: #00f2ff;
+            --gold: #ffcc00;
+            --text: #e0e0e6;
+            --error: #ff3366;
+            --border: rgba(138, 119, 255, 0.15);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg); color: var(--text); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* HEADER & PROGRESSION */
-        .header { background: var(--bg-card); padding: 15px; border-bottom: 2px solid var(--border); }
-        .stats { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; font-size: 14px; }
-        .progress-bar { height: 8px; background: #1a1a2e; border-radius: 4px; overflow: hidden; }
-        #progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--p), var(--teal)); transition: 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+        /* HEADER FIXE */
+        header { 
+            background: var(--bg-panel); padding: 15px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+        }
+        .currency { color: var(--gold); font-weight: bold; font-size: 14px; text-shadow: 0 0 8px rgba(255,204,0,0.3); }
 
-        /* NAVIGATION */
-        .nav { display: flex; background: var(--bg-card); border-bottom: 1px solid var(--border); }
-        .nav-btn { flex: 1; padding: 15px; border: none; background: none; color: #555; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .nav-btn.active { color: var(--p); border-bottom: 3px solid var(--p); background: rgba(127, 119, 221, 0.05); }
+        .progress-master { flex: 1; margin: 0 15px; height: 6px; background: #111; border-radius: 3px; overflow: hidden; }
+        #prog-bar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p), var(--teal)); transition: 0.5s; }
 
-        /* VIEWS */
-        .content { flex: 1; position: relative; }
-        .view { position: absolute; inset: 0; display: none; flex-direction: column; padding: 20px; overflow-y: auto; }
+        /* NAV TABS */
+        nav { display: flex; background: var(--bg-panel); border-bottom: 1px solid var(--border); overflow-x: auto; flex-shrink: 0; }
+        .nav-btn { 
+            padding: 15px 20px; border: none; background: none; color: #555; 
+            font-size: 11px; font-weight: bold; letter-spacing: 1px; white-space: nowrap; transition: 0.3s;
+        }
+        .nav-btn.active { color: var(--p); box-shadow: inset 0 -2px 0 var(--p); }
+
+        /* MAIN CONTENT AREA */
+        .viewport { flex: 1; position: relative; overflow: hidden; }
+        .view { position: absolute; inset: 0; display: none; flex-direction: column; padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .view.active { display: flex; }
 
-        /* CARDS */
-        .card { background: var(--bg-card); border-radius: 15px; padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; }
-        h1 { color: var(--p); font-size: 22px; margin-bottom: 10px; }
-        .scientific-note { background: rgba(29, 158, 117, 0.05); border-left: 4px solid var(--teal); padding: 15px; margin: 15px 0; font-size: 14px; color: #a9b7c6; }
+        /* CARDS & CONTENT */
+        .card { background: var(--bg-panel); border-radius: 12px; padding: 20px; border: 1px solid var(--border); margin-bottom: 15px; }
+        h1 { color: var(--p); font-size: 20px; margin-bottom: 10px; }
+        .sci-box { border-left: 3px solid var(--teal); background: rgba(0, 242, 255, 0.03); padding: 12px; font-size: 14px; color: #999; margin: 10px 0; }
         
-        /* EDITOR */
-        #editor { flex: 1; background: #000; color: #d4d4d4; padding: 15px; border: 1px solid var(--border); border-radius: 10px; font-family: monospace; font-size: 16px; margin-bottom: 10px; outline: none; }
-        .run-area { display: flex; gap: 10px; margin-bottom: 10px; }
-        .btn-run { flex: 3; padding: 15px; background: var(--p); border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 16px; }
+        /* LABO */
+        #editor { 
+            flex: 1; background: #000; color: #fff; border: 1px solid var(--border); 
+            border-radius: 8px; padding: 15px; font-family: 'Consolas', monospace; 
+            font-size: 16px; outline: none; margin-bottom: 10px; line-height: 1.5;
+        }
+        .btn-run { background: var(--p); color: #fff; border: none; padding: 16px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; }
         
-        /* CONSOLE */
-        #console { height: 180px; background: #000; border: 1px solid var(--border); border-radius: 10px; padding: 12px; font-family: monospace; font-size: 14px; overflow-y: auto; line-height: 1.5; }
-        .msg-err { color: var(--error); padding: 5px 0; }
-        .msg-success { color: var(--teal); font-weight: bold; }
+        #console { height: 200px; background: #000; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 14px; overflow-y: auto; border: 1px solid var(--border); }
+        .hint-box { background: rgba(138, 119, 255, 0.1); border: 1px dashed var(--p); padding: 10px; border-radius: 6px; margin-top: 10px; color: var(--p); font-size: 13px; display: none; }
 
-        /* CODEX */
-        .codex-item { padding: 10px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
-        .locked { opacity: 0.3; filter: grayscale(1); }
+        /* SHOP & ITEMS */
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .shop-item { background: var(--bg-panel); border: 1px solid var(--border); padding: 15px; border-radius: 10px; text-align: center; }
+        .price { color: var(--gold); font-size: 12px; display: block; margin-top: 5px; }
 
-        /* LOADER */
-        .loader-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 2000; flex-direction: column; }
-        .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--p); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* ANIMATIONS */
+        @keyframes successPop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .success-anim { animation: successPop 0.4s ease; }
+
+        .locked { filter: grayscale(1); opacity: 0.5; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div id="loader" class="loader-screen">
-    <div class="spinner"></div>
-    <h2 style="color:var(--p)">GHOSTOS ACADEMY</h2>
-    <p style="font-size: 12px; margin-top: 10px;">Chargement des modules cognitifs...</p>
-</div>
+<header>
+    <div style="font-size: 12px; font-weight: bold; color: var(--p);">GHOST_OS</div>
+    <div class="progress-master"><div id="prog-bar"></div></div>
+    <div class="currency">💰 <span id="balance">0</span></div>
+</header>
 
-<div class="header">
-    <div class="stats">
-        <span>MODULE <span id="mod-num">1</span></span>
-        <span id="streak">🔥 0 JOURS</span>
-        <span id="prog-val">0%</span>
-    </div>
-    <div class="progress-bar">
-        <div id="progress-fill"></div>
-    </div>
-</div>
+<nav>
+    <button class="nav-btn active" onclick="showTab('guide')">ACADÉMIE</button>
+    <button class="nav-btn" onclick="showTab('lab')">LABO</button>
+    <button class="nav-btn" onclick="showTab('codex')">CODEX</button>
+    <button class="nav-btn" onclick="showTab('shop')">BOUTIQUE</button>
+</nav>
 
-<div class="nav">
-    <button id="tab-guide" class="nav-btn active" onclick="switchTab('guide')">GUIDE</button>
-    <button id="tab-code" class="nav-btn" onclick="switchTab('code')">LABO</button>
-    <button id="tab-codex" class="nav-btn" onclick="switchTab('codex')">CODEX</button>
-</div>
-
-<div class="content">
+<div class="viewport">
     <div id="view-guide" class="view active">
-        <div id="lesson-box" class="card">
+        <div id="lesson-card" class="card">
             </div>
+        <div id="revision-lock" style="display:none; text-align:center;">
+            <h2 style="color:var(--error)">⚠️ RÉVISION OBLIGATOIRE</h2>
+            <p style="margin:10px 0;">Tu dois réussir l'exercice de synthèse pour débloquer la suite.</p>
+            <button class="btn-run" onclick="startRevision()">LANCER LE TEST</button>
+        </div>
     </div>
 
-    <div id="view-code" class="view">
-        <div style="font-size: 12px; color: var(--p); margin-bottom: 5px;">OBJECTIF : <span id="objective-text">...</span></div>
-        <textarea id="editor" spellcheck="false" placeholder="# Écris ton code ici..."></textarea>
-        <div class="run-area">
-            <button class="btn-run" onclick="executePython()">EXÉCUTER LE CODE</button>
-        </div>
+    <div id="view-lab" class="view">
+        <div id="mission-text" style="font-size:12px; color:var(--teal); margin-bottom:10px; font-weight:bold;"></div>
+        <textarea id="editor" spellcheck="false" placeholder="Écris ton code ici..."></textarea>
+        <button class="btn-run" onclick="runPython()">EXÉCUTER LE SIGNAL</button>
+        <div id="hint-area" class="hint-box"></div>
         <div id="console"></div>
     </div>
 
     <div id="view-codex" class="view">
-        <h1>SYNTHÈSE TACTILE</h1>
+        <h1>CODEX TACTILE</h1>
+        <p style="font-size:12px; margin-bottom:20px;">Archives des connaissances synchronisées.</p>
         <div id="codex-list"></div>
+    </div>
+
+    <div id="view-shop" class="view">
+        <h1>BOUTIQUE GHOST</h1>
+        <div class="shop-grid">
+            <div class="shop-item">
+                <div style="font-size:24px;">🟣</div>
+                <b>Aura Néon</b>
+                <span class="price">500 GC</span>
+                <button onclick="buy(500)" style="margin-top:10px; padding:5px; width:100%;">Acheter</button>
+            </div>
+            <div class="shop-item">
+                <div style="font-size:24px;">🟢</div>
+                <b>Mode Matrix</b>
+                <span class="price">1000 GC</span>
+                <button onclick="buy(1000)" style="margin-top:10px; padding:5px; width:100%;">Acheter</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    // --- BASE DE DONNÉES DES MODULES (EXTENSIBLE À L'INFINI) ---
-    const ACADEMY_DATA = [
-        {
-            id: 1,
-            title: "Le Signal Originel",
-            depth: "En informatique, tout n'est que flux. La fonction <b>print()</b> n'est pas juste du texte, c'est l'instruction qui demande au noyau d'envoyer des données vers la sortie standard (STDOUT). C'est le premier lien entre ton code et la réalité physique de l'écran.",
-            scientific: "Neuro-tip : Écrire physiquement chaque lettre active la mémoire motrice, ce qui rend l'apprentissage 3x plus rapide qu'un copier-coller.",
-            objective: "Affiche exactement le texte : Bonjour GhostOS",
-            validation: "Bonjour GhostOS",
-            codex: "print() : La fonction de sortie universelle."
+    // --- MOTEUR AUDIO (SINE WAVE SYNTH) ---
+    const Audio = {
+        ctx: new (window.AudioContext || window.webkitAudioContext)(),
+        play(freq, type, duration) {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(); osc.stop(this.ctx.currentTime + duration);
         },
-        {
-            id: 2,
-            title: "L'Étiquetage Moléculaire",
-            depth: "Les variables sont des adresses mémoires. En Python, une variable n'est pas la boîte elle-même, mais une étiquette qui pointe vers un objet dans la RAM (Tas/Heap). C'est ce qu'on appelle le typage dynamique.",
-            scientific: "Structure : [Nom de Variable] = [Valeur]. Python alloue automatiquement l'espace nécessaire.",
-            objective: "Crée une variable nommée 'x' égale à 50 et affiche x",
-            validation: "50",
-            codex: "Variables : Étiquettes pointant vers des adresses mémoire."
-        },
-        {
-            id: 3,
-            title: "La Logique Binaire",
-            depth: "Le cerveau de GhostOS repose sur des décisions. Une condition IF vérifie si un courant passe (True) ou non (False). C'est l'algèbre de Boole appliquée au silicium.",
-            scientific: "Note : L'indentation (l'espace au début) est OBLIGATOIRE en Python. C'est ce qui définit le bloc de code.",
-            objective: "Crée une variable 'v' = 10. Si v > 5, affiche: OK",
-            validation: "OK",
-            codex: "IF : Structure de décision logique basée sur le booléen."
-        }
-        // Rajouter les 100 modules ici...
+        success() { this.play(880, 'sine', 0.2); setTimeout(()=>this.play(1100, 'sine', 0.3), 100); },
+        error() { this.play(110, 'sawtooth', 0.3); }
+    };
+
+    // --- BASE DE DONNÉES MASSIVE (ARC 1: 1-10) ---
+    const DB = [
+        { id: 0, title: "L'Impulsion", desc: "Tout commence par un signal. La fonction `print()` est la voix de GhostOS.", sci: "Neurologie : En tapant ce code, tu crées un chemin synaptique entre la logique et l'action.", mission: "Affiche le texte : Ghost", target: "Ghost", hint: "Vérifie les guillemets : print(\"Ghost\")", codex: "PRINT : Envoie des données vers la sortie." },
+        { id: 1, title: "L'Adrénaline", desc: "Les variables stockent l'énergie. On utilise le signe `=` pour l'attribution.", sci: "Physique : Une variable est une case mémoire chargée électriquement.", mission: "Crée une variable a = 100 et affiche a", target: "100", hint: "N'utilise pas de crochets, juste a = 100", codex: "VARIABLES : Conteneurs de données nommés." },
+        { id: 2, title: "Fusion de Données", desc: "On peut mélanger du texte et des nombres avec `str()`.", sci: "Cognition : Le cerveau sépare les chiffres du langage. Python aussi.", mission: "Affiche : Ghost + 1", target: "Ghost1", hint: "Utilise : print(\"Ghost\" + str(1))", codex: "CONCATÉNATION : Fusion de chaînes de caractères." },
+        // ... (Système prêt pour les 100 suivants)
     ];
 
-    let currentIdx = localStorage.getItem('ghostIdx') ? parseInt(localStorage.getItem('ghostIdx')) : 0;
-    let pyodide;
+    let state = {
+        idx: parseInt(localStorage.getItem('ghost_idx')) || 0,
+        credits: parseInt(localStorage.getItem('ghost_credits')) || 0,
+        errors: 0
+    };
 
+    let pyodide;
     async function init() {
         pyodide = await loadPyodide();
-        document.getElementById('loader').style.display = 'none';
-        loadLesson();
+        document.getElementById('balance').innerText = state.credits;
+        loadModule();
         updateCodex();
     }
     init();
 
-    function loadLesson() {
-        const data = ACADEMY_DATA[currentIdx];
-        if(!data) return;
-
-        document.getElementById('lesson-box').innerHTML = `
-            <h1>${data.title}</h1>
-            <p>${data.depth}</p>
-            <div class="scientific-note">${data.scientific}</div>
-            <div style="background: rgba(127,119,221,0.1); padding:10px; border-radius:8px; border:1px dashed var(--p);">
-                <b>MISSION :</b> ${data.objective}
-            </div>
-            <button class="btn-run" style="margin-top:20px; background:var(--teal);" onclick="switchTab('code')">ALLER AU LABO</button>
+    function loadModule() {
+        const m = DB[state.idx];
+        if(!m) return;
+        document.getElementById('lesson-card').innerHTML = `
+            <h1>Module ${state.idx + 1} : ${m.title}</h1>
+            <p>${m.desc}</p>
+            <div class="sci-box">${m.sci}</div>
+            <button class="btn-run" style="width:100%; margin-top:10px;" onclick="showTab('lab')">ENTRER DANS LE LABO</button>
         `;
-        document.getElementById('objective-text').innerText = data.objective;
+        document.getElementById('mission-text').innerText = "OBJECTIF : " + m.mission;
         updateProgress();
     }
 
-    function updateProgress() {
-        const p = (currentIdx / ACADEMY_DATA.length) * 100;
-        document.getElementById('progress-fill').style.width = p + '%';
-        document.getElementById('prog-val').innerText = Math.round(p) + '%';
+    async function runPython() {
+        const code = document.getElementById('editor').value;
+        const out = document.getElementById('console');
+        const hintBox = document.getElementById('hint-area');
+        out.innerHTML = "<i>Analyse du signal...</i>";
+
+        try {
+            pyodide.runPython(`import sys, io; sys.stdout = io.StringIO()`);
+            await pyodide.runPythonAsync(code);
+            const result = pyodide.runPython("sys.stdout.getvalue()").trim();
+            out.innerHTML = `<div style="color:var(--teal)">> ${result}</div>`;
+
+            if(result === DB[state.idx].target) {
+                successAction();
+            } else {
+                failAction(null);
+            }
+        } catch (e) {
+            failAction(e.message);
+        }
     }
 
-    function switchTab(t) {
+    function successAction() {
+        Audio.success();
+        state.credits += 50;
+        state.errors = 0;
+        state.idx++;
+        save();
+        document.getElementById('console').innerHTML += `<div style="color:var(--gold); margin-top:10px;">✨ SYNCHRONISATION RÉUSSIE (+50 GC)</div>`;
+        document.getElementById('hint-area').style.display = 'none';
+        setTimeout(() => { showTab('guide'); loadModule(); updateCodex(); }, 1500);
+    }
+
+    function failAction(rawError) {
+        Audio.error();
+        state.errors++;
+        const hintBox = document.getElementById('hint-area');
+        hintBox.style.display = 'block';
+        
+        // IA d'indice simplifiée
+        let hint = "Analyse échouée. Essaie encore.";
+        if(state.errors >= 3) hint = "INDICE : " + DB[state.idx].hint;
+        if(state.errors >= 5) hint = "SOLUTION : " + DB[state.idx].target + " (Utilise le bon code !)";
+        
+        hintBox.innerText = hint;
+        document.getElementById('console').innerHTML = `<div style="color:var(--error)">${rawError || "Le résultat ne correspond pas à l'objectif."}</div>`;
+    }
+
+    function showTab(t) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('view-' + t).classList.add('active');
-        document.getElementById('tab-' + t).classList.add('active');
+        // On cherche le bouton qui a le bon onclick
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            if(btn.getAttribute('onclick').includes(t)) btn.classList.add('active');
+        });
     }
 
-    async function executePython() {
-        const code = document.getElementById('editor').value;
-        const cons = document.getElementById('console');
-        cons.innerHTML = "<i>Exécution...</i>";
-
-        try {
-            pyodide.runPython(`
-                import sys, io
-                sys.stdout = io.StringIO()
-            `);
-            await pyodide.runPythonAsync(code);
-            const output = pyodide.runPython("sys.stdout.getvalue()").trim();
-            
-            cons.innerHTML = `<div class="msg-success">> ${output || "Exécuté (sans sortie)"}</div>`;
-
-            // VALIDATION AUTO
-            if(output === ACADEMY_DATA[currentIdx].validation) {
-                cons.innerHTML += `<div class="msg-success" style="margin-top:10px;">✨ ANALYSE NEURONALE RÉUSSIE !</div>`;
-                setTimeout(() => {
-                    alert("BRAVO ! Étape validée.");
-                    currentIdx++;
-                    localStorage.setItem('ghostIdx', currentIdx);
-                    loadLesson();
-                    updateCodex();
-                    switchTab('guide');
-                }, 1000);
-            }
-        } catch (err) {
-            let msg = err.message;
-            if(msg.includes("NameError")) msg = "❌ Erreur : Tu utilises un mot ou une variable qui n'existe pas.";
-            if(msg.includes("IndentationError")) msg = "❌ Erreur : Problème d'espacement (Indentation).";
-            if(msg.includes("SyntaxError")) msg = "❌ Erreur : Il y a une faute de frappe dans ta syntaxe.";
-            cons.innerHTML = `<div class="msg-err">${msg}</div>`;
-        }
+    function updateProgress() {
+        const p = (state.idx / 20) * 100; // Basé sur les 20 premiers
+        document.getElementById('prog-bar').style.width = p + '%';
     }
 
     function updateCodex() {
         const list = document.getElementById('codex-list');
         list.innerHTML = "";
-        ACADEMY_DATA.forEach((m, i) => {
-            const isLocked = i > currentIdx;
-            list.innerHTML += `
-                <div class="card codex-item ${isLocked ? 'locked' : ''}">
-                    <div style="color:var(--teal)">${isLocked ? '🔒 Bloqué' : '✅ Acquis'}</div>
-                    <div style="font-weight:bold; margin-top:5px;">${m.title}</div>
-                    <div style="font-size:12px; color:var(--text-muted);">${isLocked ? 'Continue pour débloquer cette archive' : m.codex}</div>
-                </div>
-            `;
-        });
+        for(let i=0; i<state.idx; i++) {
+            list.innerHTML += `<div class="card"><b>${DB[i].title}</b><br><small>${DB[i].codex}</small></div>`;
+        }
+    }
+
+    function save() {
+        localStorage.setItem('ghost_idx', state.idx);
+        localStorage.setItem('ghost_credits', state.credits);
+        document.getElementById('balance').innerText = state.credits;
+    }
+
+    function buy(price) {
+        if(state.credits >= price) {
+            state.credits -= price;
+            save();
+            alert("Objet activé !");
+        } else {
+            alert("Crédits insuffisants.");
+        }
     }
 </script>
 
