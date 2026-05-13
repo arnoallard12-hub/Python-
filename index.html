@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>PyMobile Editor</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-dark:        #1e1e1e;
+      --bg-editor:      #1e1e1e;
+      --bg-console:     #0d0d0d;
+      --bg-topbar:      #323233;
+      --bg-label:       #2d2d2d;
+      --text-main:      #d4d4d4;
+      --text-muted:     #6a6a6a;
+      --accent-green:   #4ec94e;
+      --accent-green-h: #3aaf3a;
+      --accent-blue:    #569cd6;
+      --accent-red:     #f44747;
+      --border-color:   #3a3a3a;
+      --font-code:      'Courier New', Courier, monospace;
+      --font-ui:        -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --topbar-height:  52px;
+      --hl-keyword:     #c586c0;
+      --hl-string:      #ce9178;
+      --hl-number:      #b5cea8;
+      --hl-comment:     #6a9955;
+      --hl-builtin:     #dcdcaa;
+      --hl-decorator:   #dcdcaa;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* --- TOPBAR --- */
+    .topbar {
+      height: var(--topbar-height);
+      min-height: var(--topbar-height);
+      background-color: var(--bg-topbar);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+    }
+
+    .topbar-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .topbar-icon { font-size: 20px; }
+
+    .topbar-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-main);
+      letter-spacing: 0.5px;
+    }
+
+    .run-button {
+      background-color: var(--accent-green);
+      color: #000;
+      font-weight: 700;
+      font-size: 15px;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 22px;
+      min-height: 44px;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(78, 201, 78, 0.35);
+      transition: background-color 0.15s ease, transform 0.1s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .run-button:active {
+      background-color: var(--accent-green-h);
+      transform: scale(0.96);
+    }
+
+    .run-button:disabled {
+      background-color: #555;
+      color: #888;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* --- WORKSPACE --- */
+    .workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .editor-section,
+    .console-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .editor-section {
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    /* --- LABELS --- */
+    .section-label {
+      background-color: var(--bg-label);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .label-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-blue  { background-color: var(--accent-blue); }
+    .dot-green { background-color: var(--accent-green); }
+
+    .clear-button {
+      margin-left: auto;
+      background: none;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      -webkit-tap-highlight-color: transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .clear-button:active {
+      color: var(--text-main);
+      border-color: var(--text-muted);
+    }
+
+    /* --- EDITOR WRAPPER --- */
+    .editor-wrapper {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .code-highlight {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      font-family: var(--font-code);
+      font-size: 14px;
+      line-height: 1.6;
+      padding: 12px;
+      margin: 0;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      white-space: pre-wrap;
+      word-break: break-word;
+      pointer-events: none;
+      background-color: var(--bg-editor);
+      color: var(--text-main);
+      border: none;
+      outline: none;
+    }
+
+    .code-editor {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100%;
+      height: 100%;
+      font-family: var(--font-code);
+      font-size: 14px;
+      line-height: 1.6;
+      padding: 12px;
+      background: transparent;
+      color: transparent;
+      caret-color: #d4d4d4;
+      border: none;
+      outline: none;
+      resize: none;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      white-space: pre-wrap;
+      word-break: break-word;
+      tab-size: 4;
+      -moz-tab-size: 4;
+      z-index: 1;
+    }
+
+    .code-editor::placeholder {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* --- SYNTAX HIGHLIGHT COLORS --- */
+    .hl-keyword   { color: var(--hl-keyword); }
+    .hl-string    { color: var(--hl-string); }
+    .hl-number    { color: var(--hl-number); }
+    .hl-comment   { color: var(--hl-comment); font-style: italic; }
+    .hl-builtin   { color: var(--hl-builtin); }
+    .hl-decorator { color: var(--hl-decorator); }
+
+    /* --- CONSOLE --- */
+    .console-output {
+      flex: 1;
+      background-color: var(--bg-console);
+      font-family: var(--font-code);
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-main);
+      padding: 12px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .console-placeholder { color: var(--text-muted); font-style: italic; }
+    .console-error       { color: var(--accent-red); }
+    .console-success     { color: var(--text-main); }
+
+    .console-loading {
+      color: var(--accent-green);
+      animation: blink 1.2s step-start infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* --- SCROLLBARS --- */
+    .code-editor::-webkit-scrollbar,
+    .code-highlight::-webkit-scrollbar,
+    .console-output::-webkit-scrollbar { width: 4px; }
+
+    .code-editor::-webkit-scrollbar-track,
+    .code-highlight::-webkit-scrollbar-track,
+    .console-output::-webkit-scrollbar-track { background: transparent; }
+
+    .code-editor::-webkit-scrollbar-thumb,
+    .code-highlight::-webkit-scrollbar-thumb,
+    .console-output::-webkit-scrollbar-thumb {
+      background-color: var(--border-color);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="topbar-title">
+      <span class="topbar-icon">🐍</span>
+      <span class="topbar-name">PyMobile</span>
+    </div>
+    <button id="run-btn" class="run-button">▶ Run</button>
+  </header>
+
+  <main class="workspace">
+
+    <section class="editor-section">
+      <div class="section-label">
+        <span class="label-dot dot-blue"></span>
+        main.py
+      </div>
+      <div class="editor-wrapper">
+        <pre id="code-highlight" class="code-highlight" aria-hidden="true"></pre>
+        <textarea
+          id="code-editor"
+          class="code-editor"
+          spellcheck="false"
+          autocorrect="off"
+          autocapitalize="off"
+          placeholder="# Écris ton code Python ici...&#10;print('Bonjour, monde !')">
+        </textarea>
+      </div>
+    </section>
+
+    <section class="console-section">
+      <div class="section-label">
+        <span class="label-dot dot-green"></span>
+        Console
+        <button id="clear-btn" class="clear-button">Effacer</button>
+      </div>
+      <div id="console-output" class="console-output">
+        <span class="console-placeholder">Les résultats apparaîtront ici...</span>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.5/full/pyodide.js"></script>
+
+  <script>
+    // --- ÉLÉMENTS ---
+    const runBtn        = document.getElementById('run-btn');
+    const clearBtn      = document.getElementById('clear-btn');
+    const codeEditor    = document.getElementById('code-editor');
+    const codeHighlight = document.getElementById('code-highlight');
+    const consoleOutput = document.getElementById('console-output');
+
+    let pyodide = null;
+
+    // --- TOKENIZER PYTHON ---
+    const TOKENS = [
+      { type: 'string',    re: /"""[\s\S]*?"""|'''[\s\S]*?'''/y },
+      { type: 'string',    re: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/y },
+      { type: 'comment',   re: /#[^\n]*/y },
+      { type: 'decorator', re: /@[A-Za-z_][A-Za-z0-9_.]*/y },
+      { type: 'keyword',   re: /\b(False|None|True|and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b/y },
+      { type: 'builtin',   re: /\b(abs|all|any|bin|bool|breakpoint|bytearray|bytes|callable|chr|classmethod|compile|complex|delattr|dict|dir|divmod|enumerate|eval|exec|filter|float|format|frozenset|getattr|globals|hasattr|hash|help|hex|id|input|int|isinstance|issubclass|iter|len|list|locals|map|max|memoryview|min|next|object|oct|open|ord|pow|print|property|range|repr|reversed|round|set|setattr|slice|sorted|staticmethod|str|sum|super|tuple|type|vars|zip)\b/y },
+      { type: 'number',    re: /\b0x[0-9a-fA-F]+\b|\b0b[01]+\b|\b\d+\.?\d*([eE][+-]?\d+)?\b/y },
+      { type: 'plain',     re: /[\s\S]/y },
+    ];
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function highlight(code) {
+      let result = '';
+      let i = 0;
+      while (i < code.length) {
+        let matched = false;
+        for (const { type, re } of TOKENS) {
+          re.lastIndex = i;
+          const m = re.exec(code);
+          if (m) {
+            const escaped = escapeHtml(m[0]);
+            result += type === 'plain' ? escaped : `<span class="hl-${type}">${escaped}</span>`;
+            i += m[0].length;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) i++;
+      }
+      return result + '\u00A0';
+    }
+
+    function updateHighlight() {
+      codeHighlight.innerHTML = highlight(codeEditor.value);
+      codeHighlight.scrollTop  = codeEditor.scrollTop;
+      codeHighlight.scrollLeft = codeEditor.scrollLeft;
+    }
+
+    codeEditor.addEventListener('input', updateHighlight);
+    codeEditor.addEventListener('scroll', () => {
+      codeHighlight.scrollTop  = codeEditor.scrollTop;
+      codeHighlight.scrollLeft = codeEditor.scrollLeft;
+    });
+
+    codeEditor.addEventListener('keydown', function(e) {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = this.selectionStart;
+        const end   = this.selectionEnd;
+        this.value  = this.value.substring(0, start) + '    ' + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 4;
+        updateHighlight();
+      }
+    });
+
+    // --- CONSOLE ---
+    function clearConsole() { consoleOutput.innerHTML = ''; }
+
+    function printToConsole(text, type = 'success') {
+      const line = document.createElement('span');
+      line.className = `console-${type}`;
+      line.textContent = text;
+      consoleOutput.appendChild(line);
+      consoleOutput.appendChild(document.createElement('br'));
+      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+
+    function showLoading(message) {
+      clearConsole();
+      const line = document.createElement('span');
+      line.className = 'console-loading';
+      line.textContent = message;
+      consoleOutput.appendChild(line);
+    }
+
+    // --- PYODIDE ---
+    async function initPyodide() {
+      runBtn.disabled = true;
+      runBtn.textContent = '⏳ Chargement...';
+      showLoading('⏳ Chargement du moteur Python... (première fois ~10s)');
+      try {
+        pyodide = await loadPyodide();
+        runBtn.disabled = false;
+        runBtn.textContent = '▶ Run';
+        clearConsole();
+        printToConsole('✅ Python prêt. Écris du code et appuie sur Run !', 'loading');
+      } catch (err) {
+        printToConsole('❌ Erreur de chargement : ' + err.message, 'error');
+      }
+    }
+
+    async function runCode() {
+      if (!pyodide) { printToConsole('⚠️ Python pas encore chargé...', 'error'); return; }
+
+      const code = codeEditor.value.trim();
+      if (!code) { clearConsole(); printToConsole('⚠️ L\'éditeur est vide !', 'error'); return; }
+
+      clearConsole();
+      runBtn.disabled = true;
+      runBtn.textContent = '⏳ Running...';
+
+      const outputLines = [];
+      pyodide.globals.set('_js_output', outputLines);
+
+      await pyodide.runPythonAsync(`
+import sys
+
+class _JSWriter:
+    def write(self, text):
+        _js_output.append(text)
+    def flush(self):
+        pass
+
+sys.stdout = _JSWriter()
+sys.stderr = _JSWriter()
+      `);
+
+      try {
+        await pyodide.runPythonAsync(code);
+        const output = outputLines.join('');
+        if (output.trim() === '') {
+          printToConsole('✅ Code exécuté (aucune sortie)', 'loading');
+        } else {
+          output.split('\n').forEach((line, idx, arr) => {
+            if (idx < arr.length - 1 || line !== '') printToConsole(line, 'success');
+          });
+        }
+      } catch (err) {
+        printToConsole('❌ Erreur Python :', 'error');
+        err.message.split('\n').forEach(line => {
+          if (line.trim()) printToConsole('  ' + line, 'error');
+        });
+      }
+
+      runBtn.disabled = false;
+      runBtn.textContent = '▶ Run';
+    }
+
+    // --- BOUTONS ---
+    runBtn.addEventListener('click', runCode);
+    clearBtn.addEventListener('click', () => {
+      clearConsole();
+      printToConsole('Console effacée.', 'loading');
+    });
+
+    // --- DÉMARRAGE ---
+    updateHighlight();
+    initPyodide();
+  </script>
+
+</body>
+</html>
