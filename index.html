@@ -3,331 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GhostOS Academy — Python Masterclass</title>
+    <title>GhostOS Academy — Ultra</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
     <style>
         :root {
-            --bg: #0d0d14;
-            --bg-card: #16161f;
+            --bg: #050508;
+            --bg-card: #0d0d14;
             --p: #7F77DD; /* Violet GhostOS */
-            --p-glow: rgba(127, 119, 221, 0.4);
+            --teal: #1D9E75;
+            --gold: #FFD700;
             --text: #e6e3f0;
-            --text-muted: #8e8ba0;
-            --teal: #1D9E75; /* Teal GhostOS */
-            --error: #e05555;
-            --border: rgba(255,255,255,0.08);
-            --radius: 12px;
+            --error: #ff4d4d;
+            --border: rgba(127, 119, 221, 0.2);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+        /* HEADER & PROGRESSION */
+        .header { background: var(--bg-card); padding: 15px; border-bottom: 2px solid var(--border); }
+        .stats { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; font-size: 14px; }
+        .progress-bar { height: 8px; background: #1a1a2e; border-radius: 4px; overflow: hidden; }
+        #progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--p), var(--teal)); transition: 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
 
-        /* BARRE DE PROGRESSION GÉNÉRALE */
-        .header-academy {
-            background: var(--bg-card);
-            padding: 10px 15px;
-            border-bottom: 1px solid var(--border);
-        }
-        .progress-container {
-            width: 100%;
-            height: 6px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            margin-top: 8px;
-            overflow: hidden;
-        }
-        #main-progress {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, var(--p), var(--teal));
-            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 10px var(--p-glow);
-        }
+        /* NAVIGATION */
+        .nav { display: flex; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+        .nav-btn { flex: 1; padding: 15px; border: none; background: none; color: #555; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .nav-btn.active { color: var(--p); border-bottom: 3px solid var(--p); background: rgba(127, 119, 221, 0.05); }
 
-        /* NAVIGATION TABS */
-        .nav-tabs {
-            display: flex;
-            background: var(--bg-card);
-            padding: 5px;
-            gap: 5px;
-        }
-        .tab-btn {
-            flex: 1;
-            padding: 14px;
-            border: none;
-            background: transparent;
-            color: var(--text-muted);
-            font-weight: bold;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-radius: var(--radius);
-            transition: 0.3s;
-        }
-        .tab-btn.active {
-            color: var(--text);
-            background: var(--p-glow);
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.2);
-        }
-
-        /* CONTENU */
-        .content-area { flex: 1; position: relative; overflow: hidden; }
-        .view {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: none; flex-direction: column; padding: 20px; overflow-y: auto;
-        }
+        /* VIEWS */
+        .content { flex: 1; position: relative; }
+        .view { position: absolute; inset: 0; display: none; flex-direction: column; padding: 20px; overflow-y: auto; }
         .view.active { display: flex; }
 
-        /* MODULES DE L'ACADÉMIE */
-        .step-card {
-            animation: fadeIn 0.5s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* CARDS */
+        .card { background: var(--bg-card); border-radius: 15px; padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; }
+        h1 { color: var(--p); font-size: 22px; margin-bottom: 10px; }
+        .scientific-note { background: rgba(29, 158, 117, 0.05); border-left: 4px solid var(--teal); padding: 15px; margin: 15px 0; font-size: 14px; color: #a9b7c6; }
+        
+        /* EDITOR */
+        #editor { flex: 1; background: #000; color: #d4d4d4; padding: 15px; border: 1px solid var(--border); border-radius: 10px; font-family: monospace; font-size: 16px; margin-bottom: 10px; outline: none; }
+        .run-area { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn-run { flex: 3; padding: 15px; background: var(--p); border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 16px; }
+        
+        /* CONSOLE */
+        #console { height: 180px; background: #000; border: 1px solid var(--border); border-radius: 10px; padding: 12px; font-family: monospace; font-size: 14px; overflow-y: auto; line-height: 1.5; }
+        .msg-err { color: var(--error); padding: 5px 0; }
+        .msg-success { color: var(--teal); font-weight: bold; }
 
-        h1 { color: var(--p); font-size: 20px; margin-bottom: 15px; }
-        p { line-height: 1.6; color: var(--text-muted); margin-bottom: 15px; font-size: 15px; }
-        b { color: var(--text); }
-
-        .analogy-box {
-            background: rgba(29, 158, 117, 0.1);
-            border-left: 4px solid var(--teal);
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 4px;
-        }
-
-        .code-example {
-            background: #000;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: 'Consolas', monospace;
-            font-size: 13px;
-            margin: 15px 0;
-            border: 1px solid var(--border);
-            position: relative;
-        }
-
-        .btn-magic {
-            background: var(--p);
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 13px;
-            cursor: pointer;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-
-        .btn-next {
-            background: var(--teal);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: var(--radius);
-            font-weight: bold;
-            width: 100%;
-            margin-top: 20px;
-            box-shadow: 0 4px 15px rgba(29, 158, 117, 0.3);
-        }
-
-        /* ÉDITEUR & CONSOLE */
-        #editor {
-            flex: 1; background: #08080c; color: #a9b7c6;
-            border: 1px solid var(--border); border-radius: 8px;
-            padding: 15px; font-family: 'Consolas', monospace; font-size: 15px;
-            resize: none; outline: none; margin-bottom: 10px;
-        }
-        .controls { display: flex; gap: 10px; margin-bottom: 10px; }
-        .btn-run { flex: 2; background: var(--teal); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; }
-        #console {
-            height: 140px; background: #000; border-radius: 8px;
-            padding: 10px; font-family: monospace; font-size: 12px;
-            overflow-y: auto; border: 1px solid var(--border);
-        }
-        .log-success { color: var(--teal); }
-        .log-error { color: var(--error); }
+        /* CODEX */
+        .codex-item { padding: 10px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+        .locked { opacity: 0.3; filter: grayscale(1); }
 
         /* LOADER */
-        .loader {
-            position: fixed; top:0; left:0; width:100%; height:100%;
-            background: var(--bg); display: flex; align-items:center; justify-content:center;
-            z-index: 1000;
-        }
+        .loader-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 2000; flex-direction: column; }
+        .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--p); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div id="loader" class="loader">
-    <div style="text-align:center;">
-        <h2 style="color:var(--p); letter-spacing: 2px;">GHOSTOS ACADEMY</h2>
-        <p>Connexion neuronale...</p>
+<div id="loader" class="loader-screen">
+    <div class="spinner"></div>
+    <h2 style="color:var(--p)">GHOSTOS ACADEMY</h2>
+    <p style="font-size: 12px; margin-top: 10px;">Chargement des modules cognitifs...</p>
+</div>
+
+<div class="header">
+    <div class="stats">
+        <span>MODULE <span id="mod-num">1</span></span>
+        <span id="streak">🔥 0 JOURS</span>
+        <span id="prog-val">0%</span>
+    </div>
+    <div class="progress-bar">
+        <div id="progress-fill"></div>
     </div>
 </div>
 
-<div class="header-academy">
-    <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:bold;">
-        <span>PROGRESSION</span>
-        <span id="progress-text">0%</span>
-    </div>
-    <div class="progress-container">
-        <div id="main-progress"></div>
-    </div>
+<div class="nav">
+    <button id="tab-guide" class="nav-btn active" onclick="switchTab('guide')">GUIDE</button>
+    <button id="tab-code" class="nav-btn" onclick="switchTab('code')">LABO</button>
+    <button id="tab-codex" class="nav-btn" onclick="switchTab('codex')">CODEX</button>
 </div>
 
-<div class="nav-tabs">
-    <button id="btn-tab-guide" class="tab-btn active" onclick="switchTab('guide')">Apprendre</button>
-    <button id="btn-tab-code" class="tab-btn" onclick="switchTab('code')">Pratiquer</button>
-</div>
-
-<div class="content-area">
+<div class="content">
     <div id="view-guide" class="view active">
-        <div id="module-content" class="step-card">
+        <div id="lesson-box" class="card">
             </div>
-        <button id="next-btn" class="btn-next" onclick="nextStep()">ÉTAPE SUIVANTE</button>
     </div>
 
     <div id="view-code" class="view">
-        <textarea id="editor" spellcheck="false" placeholder="# Écris ton code Python ici..."></textarea>
-        <div class="controls">
-            <button class="btn-run" onclick="runPython()">▶ EXÉCUTER</button>
-            <button style="background:var(--bg-card); color:white; border:1px solid var(--border); padding:10px; border-radius:8px;" onclick="clearConsole()">X</button>
+        <div style="font-size: 12px; color: var(--p); margin-bottom: 5px;">OBJECTIF : <span id="objective-text">...</span></div>
+        <textarea id="editor" spellcheck="false" placeholder="# Écris ton code ici..."></textarea>
+        <div class="run-area">
+            <button class="btn-run" onclick="executePython()">EXÉCUTER LE CODE</button>
         </div>
         <div id="console"></div>
+    </div>
+
+    <div id="view-codex" class="view">
+        <h1>SYNTHÈSE TACTILE</h1>
+        <div id="codex-list"></div>
     </div>
 </div>
 
 <script>
-    // --- MOTEUR DE CONTENU (MODULE 1) ---
-    const moduleSteps = [
+    // --- BASE DE DONNÉES DES MODULES (EXTENSIBLE À L'INFINI) ---
+    const ACADEMY_DATA = [
         {
-            title: "L'Origine du Flux",
-            content: `<h1>La Philosophie Python</h1>
-                      <p>Dans GhostOS, on ne code pas au hasard. Python a été créé pour être <b>lisible</b>. Si un code est moche, il est probablement mauvais.</p>
-                      <div class="analogy-box">
-                        <b>Analogie :</b> Imagine que Python est un traducteur universel entre ton cerveau et la machine. Moins il y a de mots compliqués, plus le flux est rapide.
-                      </div>
-                      <p>Teste ton premier message vers le système :</p>`,
-            code: "print('Système GhostOS activé')",
-            target: "Système GhostOS activé"
+            id: 1,
+            title: "Le Signal Originel",
+            depth: "En informatique, tout n'est que flux. La fonction <b>print()</b> n'est pas juste du texte, c'est l'instruction qui demande au noyau d'envoyer des données vers la sortie standard (STDOUT). C'est le premier lien entre ton code et la réalité physique de l'écran.",
+            scientific: "Neuro-tip : Écrire physiquement chaque lettre active la mémoire motrice, ce qui rend l'apprentissage 3x plus rapide qu'un copier-coller.",
+            objective: "Affiche exactement le texte : Bonjour GhostOS",
+            validation: "Bonjour GhostOS",
+            codex: "print() : La fonction de sortie universelle."
         },
         {
-            title: "L'Entrepôt de Données",
-            content: `<h1>La Mémoire (Stack vs Heap)</h1>
-                      <p>Ton téléphone a deux types de mémoires. La <b>Stack</b> (une pile d'assiettes) pour les choses rapides, et la <b>Heap</b> (un grand entrepôt) pour les gros objets.</p>
-                      <div class="analogy-box">
-                        <b>Analogie :</b> Créer une variable, c'est coller une <b>étiquette</b> sur une boîte dans l'entrepôt.
-                      </div>
-                      <p>Crée ta première variable :</p>`,
-            code: "version = 1.0\nprint(version)",
-            target: "1.0"
+            id: 2,
+            title: "L'Étiquetage Moléculaire",
+            depth: "Les variables sont des adresses mémoires. En Python, une variable n'est pas la boîte elle-même, mais une étiquette qui pointe vers un objet dans la RAM (Tas/Heap). C'est ce qu'on appelle le typage dynamique.",
+            scientific: "Structure : [Nom de Variable] = [Valeur]. Python alloue automatiquement l'espace nécessaire.",
+            objective: "Crée une variable nommée 'x' égale à 50 et affiche x",
+            validation: "50",
+            codex: "Variables : Étiquettes pointant vers des adresses mémoire."
         },
         {
-            title: "Les Types de Réalité",
-            content: `<h1>Les Types de Données</h1>
-                      <p>Python doit savoir ce qu'il y a dans la boîte :</p>
-                      <p>1. <b>int</b> : Nombres entiers (ex: 10)<br>2. <b>str</b> : Texte (ex: "Ghost")<br>3. <b>float</b> : Nombres à virgule (ex: 1.5)</p>
-                      <div class="analogy-box"><b>Challenge :</b> Essaie de changer le type d'une donnée pour voir ce qui se passe.</div>`,
-            code: "nom = 'Ghost'\nprint(type(nom))",
-            target: "<class 'str'>"
+            id: 3,
+            title: "La Logique Binaire",
+            depth: "Le cerveau de GhostOS repose sur des décisions. Une condition IF vérifie si un courant passe (True) ou non (False). C'est l'algèbre de Boole appliquée au silicium.",
+            scientific: "Note : L'indentation (l'espace au début) est OBLIGATOIRE en Python. C'est ce qui définit le bloc de code.",
+            objective: "Crée une variable 'v' = 10. Si v > 5, affiche: OK",
+            validation: "OK",
+            codex: "IF : Structure de décision logique basée sur le booléen."
         }
+        // Rajouter les 100 modules ici...
     ];
 
-    let currentStep = localStorage.getItem('ghostos_progress') ? parseInt(localStorage.getItem('ghostos_progress')) : 0;
+    let currentIdx = localStorage.getItem('ghostIdx') ? parseInt(localStorage.getItem('ghostIdx')) : 0;
     let pyodide;
 
     async function init() {
         pyodide = await loadPyodide();
         document.getElementById('loader').style.display = 'none';
-        renderStep();
+        loadLesson();
+        updateCodex();
     }
     init();
 
-    function renderStep() {
-        const step = moduleSteps[currentStep];
-        if(!step) {
-            document.getElementById('module-content').innerHTML = "<h1>Félicitations !</h1><p>Tu as terminé le Module 1. Prêt pour le Module 2 ?</p>";
-            document.getElementById('next-btn').style.display = 'none';
-            return;
-        }
-        
-        document.getElementById('module-content').innerHTML = `
-            <span style="color:var(--teal); font-size:12px; font-weight:bold;">${step.title}</span>
-            ${step.content}
-            <div class="code-example">${step.code.replace(/\n/g, '<br>')}</div>
-            <button class="btn-magic" onclick="magicCopy('${step.code.replace(/'/g, "\\'")}')">⚡ ENVOYER À L'ÉDITEUR</button>
+    function loadLesson() {
+        const data = ACADEMY_DATA[currentIdx];
+        if(!data) return;
+
+        document.getElementById('lesson-box').innerHTML = `
+            <h1>${data.title}</h1>
+            <p>${data.depth}</p>
+            <div class="scientific-note">${data.scientific}</div>
+            <div style="background: rgba(127,119,221,0.1); padding:10px; border-radius:8px; border:1px dashed var(--p);">
+                <b>MISSION :</b> ${data.objective}
+            </div>
+            <button class="btn-run" style="margin-top:20px; background:var(--teal);" onclick="switchTab('code')">ALLER AU LABO</button>
         `;
-        
-        const progress = ((currentStep) / moduleSteps.length) * 100;
-        document.getElementById('main-progress').style.width = progress + '%';
-        document.getElementById('progress-text').innerText = Math.round(progress) + '%';
+        document.getElementById('objective-text').innerText = data.objective;
+        updateProgress();
     }
 
-    function nextStep() {
-        if(currentStep < moduleSteps.length - 1) {
-            currentStep++;
-            localStorage.setItem('ghostos_progress', currentStep);
-            renderStep();
-            switchTab('guide');
-        } else {
-            alert("Module 1 terminé !");
-        }
+    function updateProgress() {
+        const p = (currentIdx / ACADEMY_DATA.length) * 100;
+        document.getElementById('progress-fill').style.width = p + '%';
+        document.getElementById('prog-val').innerText = Math.round(p) + '%';
     }
 
-    function magicCopy(code) {
-        document.getElementById('editor').value = code;
-        switchTab('code');
+    function switchTab(t) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('view-' + t).classList.add('active');
+        document.getElementById('tab-' + t).classList.add('active');
     }
 
-    function switchTab(tab) {
-        document.getElementById('view-guide').classList.remove('active');
-        document.getElementById('view-code').classList.remove('active');
-        document.getElementById('btn-tab-guide').classList.remove('active');
-        document.getElementById('btn-tab-code').classList.remove('active');
-
-        if(tab === 'guide') {
-            document.getElementById('view-guide').classList.add('active');
-            document.getElementById('btn-tab-guide').classList.add('active');
-        } else {
-            document.getElementById('view-code').classList.add('active');
-            document.getElementById('btn-tab-code').classList.add('active');
-        }
-    }
-
-    function clearConsole() { document.getElementById('console').innerHTML = ''; }
-
-    async function runPython() {
+    async function executePython() {
         const code = document.getElementById('editor').value;
-        const consoleEl = document.getElementById('console');
-        clearConsole();
+        const cons = document.getElementById('console');
+        cons.innerHTML = "<i>Exécution...</i>";
 
         try {
             pyodide.runPython(`
-                import sys
-                import io
+                import sys, io
                 sys.stdout = io.StringIO()
             `);
             await pyodide.runPythonAsync(code);
-            const output = pyodide.runPython("sys.stdout.getvalue()");
-            const line = document.createElement('div');
-            line.className = 'log-success';
-            line.innerText = output || "Code exécuté sans erreur.";
-            consoleEl.appendChild(line);
+            const output = pyodide.runPython("sys.stdout.getvalue()").trim();
+            
+            cons.innerHTML = `<div class="msg-success">> ${output || "Exécuté (sans sortie)"}</div>`;
+
+            // VALIDATION AUTO
+            if(output === ACADEMY_DATA[currentIdx].validation) {
+                cons.innerHTML += `<div class="msg-success" style="margin-top:10px;">✨ ANALYSE NEURONALE RÉUSSIE !</div>`;
+                setTimeout(() => {
+                    alert("BRAVO ! Étape validée.");
+                    currentIdx++;
+                    localStorage.setItem('ghostIdx', currentIdx);
+                    loadLesson();
+                    updateCodex();
+                    switchTab('guide');
+                }, 1000);
+            }
         } catch (err) {
-            const line = document.createElement('div');
-            line.className = 'log-error';
-            line.innerText = err;
-            consoleEl.appendChild(line);
+            let msg = err.message;
+            if(msg.includes("NameError")) msg = "❌ Erreur : Tu utilises un mot ou une variable qui n'existe pas.";
+            if(msg.includes("IndentationError")) msg = "❌ Erreur : Problème d'espacement (Indentation).";
+            if(msg.includes("SyntaxError")) msg = "❌ Erreur : Il y a une faute de frappe dans ta syntaxe.";
+            cons.innerHTML = `<div class="msg-err">${msg}</div>`;
         }
+    }
+
+    function updateCodex() {
+        const list = document.getElementById('codex-list');
+        list.innerHTML = "";
+        ACADEMY_DATA.forEach((m, i) => {
+            const isLocked = i > currentIdx;
+            list.innerHTML += `
+                <div class="card codex-item ${isLocked ? 'locked' : ''}">
+                    <div style="color:var(--teal)">${isLocked ? '🔒 Bloqué' : '✅ Acquis'}</div>
+                    <div style="font-weight:bold; margin-top:5px;">${m.title}</div>
+                    <div style="font-size:12px; color:var(--text-muted);">${isLocked ? 'Continue pour débloquer cette archive' : m.codex}</div>
+                </div>
+            `;
+        });
     }
 </script>
 
